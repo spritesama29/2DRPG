@@ -8,7 +8,7 @@
 # Hammer From https://opengameart.org/content/heavy-iron-hammer
 # Knife From https://opengameart.org/content/knife-4
 #Chain Boots From https://opengameart.org/content/chain-boots-remix
-#The method for animating most sprites except the Dog was learned from looking at the AnimatedWalkingSprite section
+#The method for animating most sprites except the Dog was learned from looking at the AnimatedWalkingSprite section of the Python Arcade website
 import arcade
 import pathlib
 

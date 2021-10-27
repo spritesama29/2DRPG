@@ -1,10 +1,11 @@
 #Kyle Stearns
+#Player from https://opengameart.org/content/animated-rogue-extra
 #Sounds from https://opengameart.org/content/horror-sound-effects-library
-#Grey NPC from
+#Grey NPC from https://opengameart.org/content/ghost-1
 #Dog from https://opengameart.org/content/hell-hound-character
-#Monsters From
-#Fire from
-#Yellow Lightning From
+#Monsters From User https://opengameart.org/users/dogchicken
+#Fire from https://opengameart.org/content/lpc-flames
+#Yellow Lightning From https://opengameart.org/content/rpg-special-move-effects
 # Hammer From https://opengameart.org/content/heavy-iron-hammer
 # Knife From https://opengameart.org/content/knife-4
 #Chain Boots From https://opengameart.org/content/chain-boots-remix

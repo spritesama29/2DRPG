@@ -1,6 +1,17 @@
+#Kyle Stearns
+#Sounds from https://opengameart.org/content/horror-sound-effects-library
+#Grey NPC from
+#Dog from https://opengameart.org/content/hell-hound-character
+#Monsters From
+#Fire from
+#Yellow Lightning From
+# Hammer From https://opengameart.org/content/heavy-iron-hammer
+# Knife From https://opengameart.org/content/knife-4
+#Chain Boots From https://opengameart.org/content/chain-boots-remix
+#The method for animating most sprites except the Dog was learned from looking at the AnimatedWalkingSprite section
 import arcade
 import pathlib
-import random
+
 
 
 
@@ -132,7 +143,7 @@ class Skull(arcade.Sprite):
         self.death = False
         self.scale = 1
         self.speed=1
-        self.scoreReduction =0
+        self.scoreReduction =50
         self.health = 25
         self.currentTexture = 0
         self.frameSpeed=0
@@ -177,7 +188,7 @@ class Skull(arcade.Sprite):
                 if self.currentTexture > 3:
                     self.currentTexture = 0
                     self.attackingLeft=False
-                    self.scoreReduction=50
+
                 self.texture = self.attackLeftTextures[self.currentTexture]
             elif (self.change_x > 0):
                 self.faceRight=True
@@ -344,7 +355,7 @@ class Plant(arcade.Sprite):
                 if self.currentTexture > 4:
                     self.currentTexture = 0
                     self.attacking = False
-                    self.scoreReduction=100
+                    self.scoreReduction=200
 
                 self.texture = self.attackingTextures[self.currentTexture]
             else:
@@ -419,7 +430,7 @@ class GameWindow(arcade.Window):
         self.flameFrameList.append(self.flameSprite)
 
         lightPath = pathlib.Path.cwd() / 'Assets' / 'YellowJolt.png'
-        self.lightSprite = arcade.AnimatedTimeBasedSprite(lightPath, .85, image_width=64, image_height=64, center_x=295,
+        self.lightSprite = arcade.AnimatedTimeBasedSprite(lightPath, .95, image_width=64, image_height=64, center_x=295,
                                                         center_y=715)
         lightFrames: list[arcade.AnimationKeyframe] = []
         for row in range(3):
@@ -430,6 +441,33 @@ class GameWindow(arcade.Window):
         self.lightSprite.frames = lightFrames
         self.lightSpriteFrames = arcade.SpriteList()
         self.lightSpriteFrames.append(self.lightSprite)
+
+        #Sounds
+
+        knife_path = pathlib.Path.cwd() / 'Assets' / 'Stab_Knife_00.mp3'
+        self.knifeSound = arcade.load_sound(knife_path)
+
+        zombie_path = pathlib.Path.cwd() / 'Assets' / 'Zombie_01.mp3'
+        self.zombieSound = arcade.load_sound(zombie_path)
+
+        deadZombie_path = pathlib.Path.cwd() / 'Assets' / 'Monster_00.mp3'
+        self.deadZombieSound = arcade.load_sound(deadZombie_path)
+
+        win_path = pathlib.Path.cwd() / 'Assets' / 'Jingle_Win_00.mp3'
+        self.winSound = arcade.load_sound(win_path)
+        self.winOver =0
+        mint_path = pathlib.Path.cwd() / 'Assets' / 'Jingle_Achievement_00.mp3'
+        self.mintSound = arcade.load_sound(mint_path)
+        self.hasMintOver=0
+        plantDeathSoundPath = pathlib.Path.cwd() / 'Assets' / 'Monster_01.mp3'
+        self.plantDeathSound = arcade.load_sound(plantDeathSoundPath)
+
+        tongueDeathPath = pathlib.Path.cwd() / 'Assets' / 'Monster_02.mp3'
+        self.tongueDeathSound = arcade.load_sound(tongueDeathPath)
+
+        mysteryPath = pathlib.Path.cwd() / 'Assets' / 'Evil_Machine_Loop_00.mp3'
+        self.mysterySound = arcade.load_sound(mysteryPath)
+        self.mysteryOver=0
         self.gui = arcade.Camera(self.width, self.height)
         self.gui = arcade.Camera(self.width,self.height)
 
@@ -462,7 +500,7 @@ class GameWindow(arcade.Window):
         self.player.attacking=False
 
         self.npc = NPC()
-        self.npc.center_x =400
+        self.npc.center_x =300
         self.npc.center_y = 400
 
         self.skull = Skull()
@@ -538,9 +576,9 @@ class GameWindow(arcade.Window):
             speed,
             200,
             700,
-            arcade.color.HOT_MAGENTA,
+            arcade.color.PURPLE,
             18, )
-        strength = f"strength: {self.player.strength}"
+        strength = f"Strength: {self.player.strength}"
         arcade.draw_text(
             strength,
             350,
@@ -573,7 +611,7 @@ class GameWindow(arcade.Window):
             arcade.draw_text("Could you do me a favor and find out what the Dog doin'?", 200, 425,
                          arcade.color.GREEN, 12, 80, 'left')
 
-            self.player.score=100
+
         elif self.talking==True and self.npcCheck==True and self.hasMint==False:
             arcade.draw_text("Did you find out yet?", 250, 425,
                          arcade.color.GREEN, 12, 80, 'left')
@@ -617,7 +655,7 @@ class GameWindow(arcade.Window):
             arcade.draw_text("Fine whatever please leave"
                              , 75, 125,
                              arcade.color.YELLOW_ROSE, 12, 80, 'left')
-            self.player.score=300
+
             self.hasMint=True
         elif self.talking==True and self.dogCheck==True and self.dogCount>6:
             arcade.draw_text("I gave you the mint, now scram"
@@ -657,6 +695,7 @@ class GameWindow(arcade.Window):
             if key == arcade.key.X and self.player.change_x ==0 and self.player.change_y==0:
                 self.player.currentTexture=0
                 self.player.attacking=True
+                arcade.play_sound(self.knifeSound)
             if key == arcade.key.Z and self.dogCheck==True:
                 self.talking=True
                 if self.questStart==True:
@@ -699,10 +738,19 @@ class GameWindow(arcade.Window):
         self.flyClose = 50>self.flyMon.center_x-self.player.center_x>0
         self.inventorySpace = self.player.inventorySlots<2
         #logic for picking up items
-        if self.questDone==True:
+        if self.questDone==True and self.winOver==0:
             self.player.speed=7
-
+            arcade.play_sound(self.winSound)
+            self.winOver=1
+        if self.questStart==True and self.mysteryOver==0:
+            arcade.play_sound(self.mysterySound)
+            self.mysteryOver=1
+        if self.hasMint==True and self.hasMintOver==0:
+            arcade.play_sound(self.mintSound)
+            self.hasMintOver=1
         if arcade.check_for_collision(self.player,self.knifePickUp)==True and self.player.hasKnife==False and self.inventorySpace:
+
+
             self.player.hasKnife=True
             self.player.strength=4
             self.itemList.remove(self.knifePickUp)
@@ -725,6 +773,7 @@ class GameWindow(arcade.Window):
         if self.skull.health<0:
             if self.skull.death==False:
                 self.player.score+=100
+                arcade.play_sound(self.deadZombieSound)
             self.skull.death = True
 
             self.knifePickUp.center_x = self.skull.center_x
@@ -733,6 +782,7 @@ class GameWindow(arcade.Window):
             self.player.center_x= self.skull.center_x - 15
         if self.skullClose and self.skull.death==False and self.skull.faceLeft==True and self.currentScene==self.startingRightScene:
             self.skull.attackingLeft=True
+            arcade.play_sound(self.zombieSound)
             self.player.center_x-=7
             self.player.change_x=0
             self.player.score-=self.skull.scoreReduction
@@ -748,7 +798,8 @@ class GameWindow(arcade.Window):
 
         if self.flyMon.health<0:
             if self.flyMon.death==False:
-                self.player.score+=100
+                self.player.score+=400
+                arcade.play_sound(self.tongueDeathSound)
             self.flyMon.death = True
             self.bootsPickUp.center_x = self.flyMon.center_x
             self.bootsPickUp.center_y = self.flyMon.center_y
@@ -769,16 +820,19 @@ class GameWindow(arcade.Window):
 
         #Logic for plant Monster
         if self.plant.health < 0:
-            if self.plant.death == False:
-                self.player.score += 100
 
+            if self.plant.death == False:
+                self.player.score += 200
+                arcade.play_sound(self.plantDeathSound)
             self.plant.death=True
             self.hammerPickUp.center_x = self.plant.center_x
             self.hammerPickUp.center_y = self.plant.center_y
         if self.plantCheck==True and self.currentScene==self.tPathScene:
             self.player.center_x=self.plant.center_x-25
         if self.plantClose and self.plant.death==False and self.currentScene==self.tPathScene:
+
             self.plant.attacking=True
+
             self.player.score-=self.plant.scoreReduction
         if self.player.attacking==True and self.plantClose==True and self.plant.death==False:
             self.plant.health = self.plant.health - self.player.strength
@@ -875,7 +929,7 @@ class GameWindow(arcade.Window):
               self.player.center_x = self.npc.center_x-10
 
         elif self.dogCheck==True:
-            self.player.center_x = self.dogSprite.center_x+50
+            self.player.center_x = self.dogSprite.center_x+55
 
 
 

@@ -2,6 +2,7 @@
 Kyle Stearns
 To play, use Z to talk to npcs, press x to attack and press the arrow keys to move.
 Keep in  mind that you must be standing still to attack, as you have no need to overexert yourself with things like dash attacks! It's all about precision and planning.
+I have the player interact with 5 other entities, The Dog, The Ghost, the Zombie. the Plant. and the Tongue. 
 Tips!
 While Enemies dont damage to you, getting attacked decreases your score so getting hit still has consequences!
 -Enemies only attack when they see you, not when you are close, so it is recommended that you attack from behind, as enemies can inflict knockback and push you out of attack range

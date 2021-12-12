@@ -12,7 +12,7 @@
 #The method for animating most sprites except the Dog was learned from looking at the AnimatedWalkingSprite section of the Python Arcade website
 import arcade
 import pathlib
-
+import random
 
 
 
@@ -139,18 +139,20 @@ class Skull(arcade.Sprite):
         self.skullWidth = 64
         NPCAnPath = pathlib.Path.cwd() / 'Assets' / 'skullGuy.png'
         self.attackingLeft =False
+        self.attackingRight = False
         self.faceRight = True
         self.faceLeft = False
         self.death = False
         self.scale = 1
         self.speed=1
-        self.scoreReduction =50
+        self.scoreReduction =25
         self.health = 25
         self.currentTexture = 0
         self.frameSpeed=0
         self.walkRightTextures = []
         self.walkLeftTextures = []
         self.attackLeftTextures = []
+        self.attackRightTextures = []
         self.deathTextures = []
         for count in range(4):
             wRframe = arcade.load_texture(NPCAnPath,count*self.skullWidth,self.skullHeight,height=self.skullHeight,width=self.skullWidth)
@@ -161,6 +163,9 @@ class Skull(arcade.Sprite):
         for count in range(4):
             attackFrame = arcade.load_texture(NPCAnPath,count*self.skullWidth,self.skullHeight*2,height=self.skullHeight,width=self.skullWidth, flipped_horizontally=True)
             self.attackLeftTextures.append(attackFrame)
+        for count in range(4):
+            attackFrame1 = arcade.load_texture(NPCAnPath,count*self.skullWidth,self.skullHeight*2,height=self.skullHeight,width=self.skullWidth, flipped_horizontally=False)
+            self.attackRightTextures.append(attackFrame1)
         for count in range(7):
             deathFrame = arcade.load_texture(NPCAnPath,count*self.skullWidth,self.skullHeight*3,height=self.skullHeight,width=self.skullWidth, flipped_horizontally=True)
             self.deathTextures.append(deathFrame)
@@ -191,6 +196,14 @@ class Skull(arcade.Sprite):
                     self.attackingLeft=False
 
                 self.texture = self.attackLeftTextures[self.currentTexture]
+            if self.attackingRight==True:
+                self.change_x=0
+                self.currentTexture += 1
+                if self.currentTexture > 3:
+                    self.currentTexture = 0
+                    self.attackingRight=False
+
+                self.texture = self.attackRightTextures[self.currentTexture]
             elif (self.change_x > 0):
                 self.faceRight=True
                 self.faceLeft=False
@@ -212,10 +225,11 @@ class flyingMonster(arcade.Sprite):
         self.flyWidth = 64
         NPCAnPath = pathlib.Path.cwd() / 'Assets' / 'tongueGuy.png'
         self.attackingLeft =False
+        self.attackingRight = False
         self.faceRight = True
         self.faceLeft = False
         self.death = False
-        self.scale = 2
+        self.scale = 1.5
         self.speed=1
         self.scoreReduction =10
         self.health = 75
@@ -224,6 +238,7 @@ class flyingMonster(arcade.Sprite):
         self.walkRightTextures = []
         self.walkLeftTextures = []
         self.attackLeftTextures = []
+        self.attackRightTextures = []
         self.deathTextures = []
         for count in range(4):
             wRframe = arcade.load_texture(NPCAnPath,count*self.flyWidth,0,height=self.flyHeight,width=self.flyWidth)
@@ -234,6 +249,9 @@ class flyingMonster(arcade.Sprite):
         for count in range(4):
             attackFrame = arcade.load_texture(NPCAnPath,count*self.flyWidth,self.flyHeight,height=self.flyHeight,width=self.flyWidth, flipped_horizontally=True)
             self.attackLeftTextures.append(attackFrame)
+        for count in range(4):
+            attackFrame1 = arcade.load_texture(NPCAnPath,count*self.flyWidth,self.flyHeight,height=self.flyHeight,width=self.flyWidth, flipped_horizontally=False)
+            self.attackRightTextures.append(attackFrame1)
         for count in range(5):
             deathFrame = arcade.load_texture(NPCAnPath,count*self.flyWidth,self.flyHeight*2,height=self.flyHeight,width=self.flyWidth)
             self.deathTextures.append(deathFrame)
@@ -264,6 +282,14 @@ class flyingMonster(arcade.Sprite):
                     self.attackingLeft=False
 
                 self.texture = self.attackLeftTextures[self.currentTexture]
+            if self.attackingRight==True:
+                self.change_x=0
+                self.currentTexture += 1
+                if self.currentTexture > 3:
+                    self.currentTexture = 0
+                    self.attackingRight=False
+
+                self.texture = self.attackRightTextures[self.currentTexture]
             elif (self.change_x > 0):
                 self.faceRight=True
                 self.faceLeft=False
@@ -505,11 +531,12 @@ class GameWindow(arcade.Window):
         self.npc.center_y = 400
 
         self.skull = Skull()
-        self.skull.center_y=400
+        self.skull.center_y=390
         self.skull.center_x=400
         self.skull.attackingLeft= False
 
         self.talking = False
+        self.count = 0
         self.dogCount =0
         self.npcCount =0
         self.npcCount2 = 0
@@ -556,6 +583,11 @@ class GameWindow(arcade.Window):
 
         self.currentScene = self.starting1Scene
 
+        self.skullPath = None
+        self.skullBarrierList=None
+        self.flyPath = None
+        self.flyBarrierList = None
+        self.flyCount = 0
     def on_draw(self):
         arcade.start_render()
 
@@ -729,14 +761,68 @@ class GameWindow(arcade.Window):
         self.monsterList.update()
         self.monsterList.update_animation()
 
+        if self.currentScene!=self.startingRightScene:
+            self.skull.center_x=400
+            self.skull.center_y=390
+        if self.currentScene==self.startingRightScene and self.skullBarrierList==None:
+            self.skullBarrierList = arcade.AStarBarrierList(self.monsterList[0], self.startingRightWallList,50,0,self.width,0,self.height)
+
+        if self.skullBarrierList!=None and self.currentScene==self.startingRightScene:
+                self.skullPath = arcade.astar_calculate_path([self.skull.center_x,self.skull.center_y],[self.player.center_x,self.player.center_y],
+                                                self.skullBarrierList, diagonal_movement=False)
+                if self.skullPath and len(self.skullPath) > 1:
+                    if self.skull.center_y < self.skullPath[1][1]:
+                        self.skull.center_y += min(self.skull.speed,self.skullPath[1][1] - self.skull.center_y+10)
+                        self.skull.center_y += 1
+
+                    elif self.skull.center_y > self.skullPath[1][1]:
+                        self.skull.center_y -= min(self.skull.speed, self.skull.center_y - self.skullPath[1][1])
+                        self.skull.center_y -= 1
+
+                    if self.skull.center_x < self.skullPath[1][0]:
+                        self.skull.center_x += min(self.skull.speed,self.skullPath[1][0] - self.skull.center_x+10)
+                        self.skull.center_x += 1
+                        self.skull.change_x=.001
+
+                    elif self.skull.center_x > self.skullPath[1][0]:
+                        self.skull.center_x -= min(self.skull.speed, self.skull.center_x-10 - self.skullPath[1][0])
+                        self.skull.center_x += -1
+                        self.skull.change_x=-.001
+        if self.currentScene!=self.tUnderScene:
+            self.flyMon.center_x=500
+            self.flyMon.center_y=400
+        if self.currentScene==self.tUnderScene and self.flyBarrierList==None:
+            self.flyBarrierList = arcade.AStarBarrierList(self.monsterList[0], self.tUnderWallList,60,0,self.width,0,self.height)
+
+        if self.flyBarrierList!=None and self.currentScene==self.tUnderScene:
+                self.flyPath = arcade.astar_calculate_path([self.flyMon.center_x,self.flyMon.center_y],[self.player.center_x,self.player.center_y],
+                                                self.flyBarrierList, diagonal_movement=False)
+                if self.flyPath and len(self.flyPath) > 1:
+                    if self.flyMon.center_y < self.flyPath[1][1]:
+                        self.flyMon.center_y += min(self.flyMon.speed,self.flyPath[1][1] - self.flyMon.center_y+10)
+                        self.flyMon.center_y += 1
+
+                    elif self.flyMon.center_y > self.flyPath[1][1]:
+                        self.flyMon.center_y -= min(self.flyMon.speed, self.flyMon.center_y - self.flyPath[1][1])
+                        self.flyMon.center_y -= 1
+
+                    if self.flyMon.center_x < self.flyPath[1][0]:
+                        self.flyMon.center_x += min(self.flyMon.speed,self.flyPath[1][0] - self.flyMon.center_x+10)
+                        self.flyMon.center_x += 1
+                        self.flyMon.change_x=.001
+
+                    elif self.flyMon.center_x > self.flyPath[1][0]:
+                        self.flyMon.center_x -= min(self.flyMon.speed, self.flyMon.center_x-10 - self.flyPath[1][0])
+                        self.flyMon.center_x += -1
+                        self.flyMon.change_x=-.001
         self.npcCheck = arcade.check_for_collision(self.player, self.npc) and self.currentScene==self.townScene
         self.dogCheck = arcade.check_for_collision(self.player, self.dogSprite) and self.currentScene==self.tUnderScene
         self.skullCheck = arcade.check_for_collision(self.player,self.skull) and self.skull.death==False
-        self.skullClose = 20>self.skull.center_x-self.player.center_x>0
+        self.skullClose = 50>abs(self.skull.center_x-self.player.center_x)>0 and 40>self.skull.center_y - self.player.center_y>-40
         self.plantCheck = arcade.check_for_collision(self.player,self.plant) and self.plant.death==False
         self.plantClose = 30>self.plant.center_x-self.player.center_x>0
         self.flyCheck = arcade.check_for_collision(self.player,self.flyMon) and self.flyMon.death==False
-        self.flyClose = 50>self.flyMon.center_x-self.player.center_x>0
+        self.flyClose = 40>abs(self.flyMon.center_x-self.player.center_x)>0 and 40>self.flyMon.center_y - self.player.center_y>-40
         self.inventorySpace = self.player.inventorySlots<2
         #logic for picking up items
         if self.questDone==True and self.winOver==0:
@@ -749,19 +835,19 @@ class GameWindow(arcade.Window):
         if self.hasMint==True and self.hasMintOver==0:
             arcade.play_sound(self.mintSound)
             self.hasMintOver=1
-        if arcade.check_for_collision(self.player,self.knifePickUp)==True and self.player.hasKnife==False and self.inventorySpace:
+        if arcade.check_for_collision(self.player,self.knifePickUp)==True and self.player.hasKnife==False and self.inventorySpace and self.currentScene==self.startingRightScene:
 
 
             self.player.hasKnife=True
             self.player.strength=4
             self.itemList.remove(self.knifePickUp)
             self.player.inventorySlots+=1
-        if arcade.check_for_collision(self.player,self.hammerPickUp)==True and self.player.hasHammer==False and self.inventorySpace:
+        if arcade.check_for_collision(self.player,self.hammerPickUp)==True and self.player.hasHammer==False and self.inventorySpace and self.currentScene==self.tPathScene:
             self.player.hasHammer=True
             self.player.strength=10
             self.itemList.remove(self.hammerPickUp)
             self.player.inventorySlots += 1
-        if arcade.check_for_collision(self.player,self.bootsPickUp)==True and self.player.hasBoots==False and self.inventorySpace:
+        if arcade.check_for_collision(self.player,self.bootsPickUp)==True and self.player.hasBoots==False and self.inventorySpace and self.currentScene==self.tUnderScene:
             self.player.hasBoots=True
             self.player.speed=3
             self.itemList.remove(self.bootsPickUp)
@@ -775,22 +861,46 @@ class GameWindow(arcade.Window):
             if self.skull.death==False:
                 self.player.score+=100
                 arcade.play_sound(self.deadZombieSound)
+                self.knifePickUp.center_x = self.skull.center_x
+                self.knifePickUp.center_y = self.skull.center_y
             self.skull.death = True
 
-            self.knifePickUp.center_x = self.skull.center_x
-            self.knifePickUp.center_y = self.skull.center_y
-        if self.skullCheck==True and self.player.faceRight==True and self.currentScene==self.startingRightScene:
+
+        if self.skullCheck==True and self.player.center_x>self.skull.center_x and self.currentScene==self.startingRightScene:
+            self.player.center_x= self.skull.center_x + 15
+        if self.skullCheck==True and self.player.center_x<self.skull.center_x and self.currentScene==self.startingRightScene:
             self.player.center_x= self.skull.center_x - 15
+        if self.skullCheck==True and 10>abs(self.player.center_y - self.skull.center_y)>0 and self.player.center_y>self.skull.center_y and self.currentScene==self.startingRightScene:
+            self.player.center_y= self.skull.center_y + 30
+        if self.skullCheck==True and 30>abs(self.player.center_y - self.skull.center_y)>0 and self.player.center_y<self.skull.center_y-20 and self.currentScene==self.startingRightScene:
+            self.player.center_y= self.skull.center_y - 50
+
         if self.skullClose and self.skull.death==False and self.skull.faceLeft==True and self.currentScene==self.startingRightScene:
-            self.skull.attackingLeft=True
-            arcade.play_sound(self.zombieSound)
-            self.player.center_x-=7
-            self.player.change_x=0
-            self.player.score-=self.skull.scoreReduction
-        if self.skull.center_x <200 and self.skull.attackingLeft==False or self.skull.change_x==0:
-            self.skull.change_x =.4
-        elif self.skull.center_x >600 and self.skull.attackingLeft==False:
-            self.skull.change_x =-2
+
+            #self.player.center_x-=7
+            self.count+=1
+            if self.count==40:
+                self.skull.attackingLeft = True
+                self.player.change_x=0
+
+                self.player.score-=self.skull.scoreReduction
+                arcade.play_sound(self.zombieSound)
+                self.count = 0
+        if self.skullClose and self.skull.death==False and self.skull.faceRight==True and self.currentScene==self.startingRightScene:
+
+            #self.player.center_x-=7
+            self.count+=1
+            if self.count==40:
+                self.skull.attackingRight = True
+                self.player.change_x=0
+
+                self.player.score-=self.skull.scoreReduction
+                arcade.play_sound(self.zombieSound)
+                self.count = 0
+        #if self.skull.center_x <200 and self.skull.attackingLeft==False or self.skull.change_x==0:
+         #   self.skull.change_x =.4
+        #elif self.skull.center_x >600 and self.skull.attackingLeft==False:
+         #   self.skull.change_x =-2
 
 
         #Logic for flying monster
@@ -801,23 +911,43 @@ class GameWindow(arcade.Window):
             if self.flyMon.death==False:
                 self.player.score+=400
                 arcade.play_sound(self.tongueDeathSound)
+                self.bootsPickUp.center_x = self.flyMon.center_x
+                self.bootsPickUp.center_y = self.flyMon.center_y
             self.flyMon.death = True
-            self.bootsPickUp.center_x = self.flyMon.center_x
-            self.bootsPickUp.center_y = self.flyMon.center_y
+
+
 
         if self.flyClose and self.flyMon.death==False and self.flyMon.faceLeft==True and self.currentScene==self.tUnderScene:
-            self.flyMon.attackingLeft=True
-            self.player.center_x-=10
-            self.player.change_x=0
-            self.flyMon.center_x-=7
-            self.flyMon.currentTexture=0
-            self.player.score-=self.flyMon.scoreReduction
-        if self.flyCheck==True and self.currentScene==self.tUnderScene:
-            self.player.center_x-=7
-        if self.flyMon.center_x >700 and self.flyMon.attackingLeft==False:
-            self.flyMon.change_x =-1
-        if self.flyMon.center_x <500 and self.flyMon.attackingLeft==False or self.flyMon.change_x==0:
-            self.flyMon.change_x =.7
+
+            self.flyCount+=1
+            #self.player.center_x-=10
+            if self.flyCount==40:
+                self.player.change_x=0
+            #self.flyMon.center_x-=7
+                self.flyMon.attackingLeft=True
+                self.flyMon.currentTexture=0
+                self.player.score-=self.flyMon.scoreReduction
+                self.flyCount=0
+        if self.flyClose and self.flyMon.death==False and self.flyMon.faceRight==True and self.currentScene==self.tUnderScene:
+
+            self.flyCount+=1
+            #self.player.center_x-=10
+            if self.flyCount==40:
+                self.player.change_x=0
+            #self.flyMon.center_x-=7
+                self.flyMon.attackingRight=True
+                self.flyMon.currentTexture=0
+                self.player.score-=self.flyMon.scoreReduction
+                self.flyCount=0
+        if self.flyCheck==True and self.player.center_x<self.flyMon.center_x and self.currentScene==self.tUnderScene:
+            self.player.center_x=self.flyMon.center_x-20
+        if self.flyCheck == True and self.player.center_x>self.flyMon.center_x and self.currentScene == self.tUnderScene:
+            self.player.center_x = self.flyMon.center_x+30
+        if self.flyCheck==True and 10>abs(self.player.center_y - self.flyMon.center_y)>0 and self.player.center_y>self.flyMon.center_y:
+            self.player.center_y= self.flyMon.center_y + 30
+        if self.flyCheck==True and 40>abs(self.player.center_y - self.flyMon.center_y)>0 and self.player.center_y<self.flyMon.center_y-20:
+            self.player.center_y= self.flyMon.center_y - 50
+
 
         #Logic for plant Monster
         if self.plant.health < 0:
@@ -825,6 +955,8 @@ class GameWindow(arcade.Window):
             if self.plant.death == False:
                 self.player.score += 200
                 arcade.play_sound(self.plantDeathSound)
+
+
             self.plant.death=True
             self.hammerPickUp.center_x = self.plant.center_x
             self.hammerPickUp.center_y = self.plant.center_y
@@ -835,7 +967,7 @@ class GameWindow(arcade.Window):
             self.plant.attacking=True
 
             self.player.score-=self.plant.scoreReduction
-        if self.player.attacking==True and self.plantClose==True and self.plant.death==False:
+        if self.player.attacking==True and self.plantClose==True and self.plant.death==False and self.currentScene==self.tPathScene:
             self.plant.health = self.plant.health - self.player.strength
 
 
@@ -847,6 +979,9 @@ class GameWindow(arcade.Window):
             self.simple_physics = arcade.PhysicsEngineSimple(self.player, self.startingRightWallList)
             if self.skull.death==False:
                 self.monsterList.append(self.skull)
+
+
+
                 self.itemList.append(self.knifePickUp)
             if self.skull.death==True and self.player.hasKnife==False:
                 self.itemList.append(self.knifePickUp)
@@ -858,7 +993,7 @@ class GameWindow(arcade.Window):
                 self.itemList.remove(self.knifePickUp)
             if self.skull.death==False:
                 self.monsterList.remove(self.skull)
-
+            #self.itemList.append(self.hammerPickUp)
 
         elif self.player.center_x >self.width and self.currentScene ==self.startingRightScene:
             self.player.center_x = 0
@@ -867,6 +1002,11 @@ class GameWindow(arcade.Window):
             if self.plant.death==False:
                 self.monsterList.append(self.plant)
                 self.itemList.append(self.hammerPickUp)
+            if self.skull.death==False:
+                self.monsterList.remove(self.skull)
+            if self.skull.death==True and self.player.hasKnife==False:
+                self.itemList.remove(self.knifePickUp)
+
             if self.plant.death==True and self.player.hasHammer==False:
                 self.itemList.append(self.hammerPickUp)
         elif self.player.center_x < 0 and self.currentScene == self.tPathScene:
@@ -876,6 +1016,12 @@ class GameWindow(arcade.Window):
             if self.plant.death==False:
                 self.monsterList.remove(self.plant)
                 self.itemList.remove(self.hammerPickUp)
+            if self.skull.death==False:
+                self.monsterList.append(self.skull)
+            if self.skull.death == True and self.player.hasKnife == False:
+                self.itemList.append(self.knifePickUp)
+
+            #self.itemList.remove(self.hammerPickUp)
             if self.plant.death==True and self.player.hasHammer==False:
                 self.itemList.remove(self.hammerPickUp)
         elif self.player.center_x > self.width and self.currentScene == self.tPathScene:
@@ -906,7 +1052,7 @@ class GameWindow(arcade.Window):
                 self.itemList.append(self.bootsPickUp)
             if self.plant.death==False:
                 self.monsterList.remove(self.plant)
-                self.itemList.remove(self.hammerPickUp)
+
             if self.plant.death == True and self.player.hasHammer == False:
                 self.itemList.remove(self.hammerPickUp)
         elif self.player.center_y > self.height and self.currentScene == self.tUnderScene:
@@ -916,9 +1062,11 @@ class GameWindow(arcade.Window):
             self.player_list.remove(self.dogSprite)
             if self.plant.death==False:
                 self.monsterList.append(self.plant)
-
-            if self.player.hasHammer==False:
-                self.itemList.append(self.hammerPickUp)
+            try:
+                if self.player.hasHammer==False:
+                    self.itemList.append(self.hammerPickUp)
+            except:
+                print("none")
             if self.player.hasBoots==False:
                 self.itemList.remove(self.bootsPickUp)
             if self.flyMon.death==False:

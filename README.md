@@ -11,3 +11,10 @@ If you want a challenge with a nice reward, go down first, but if you want a slo
 -I had some playtesters say the flying Enemy is quite tough, given his high health pool and limited back exposure, so try and watch for when he turns around!
 -Also turn down your sound alittle b/c the Tongue Enemy's death sound is much louder than the others for some reason.
 -Have fun! I hope you enjoy!
+-------Patch Notes--------
+Hello patient fans! Were back with a new patch for your favorite 2D RPG
+--Skull and Flying enemy now have path finding 
+These enemies will path find to the player as long as one would think it would notice them. 
+---New mechanic---Shadows:
+There are now black areas on the redesigned map so you can hide from the sight of enemies, so they cannot track you any longer
+They can only attack side to side so use this to your advantage. Since they can only attack from side to side you might be able to stand near them without being hit and go for a stealth kill

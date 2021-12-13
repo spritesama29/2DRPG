@@ -10,6 +10,7 @@
 # Knife From https://opengameart.org/content/knife-4
 #Chain Boots From https://opengameart.org/content/chain-boots-remix
 #The method for animating most sprites except the Dog was learned from looking at the AnimatedWalkingSprite section of the Python Arcade website
+#Pathing was learned from the python arcade website
 import arcade
 import pathlib
 import random
@@ -764,57 +765,60 @@ class GameWindow(arcade.Window):
         if self.currentScene!=self.startingRightScene:
             self.skull.center_x=400
             self.skull.center_y=390
-        if self.currentScene==self.startingRightScene and self.skullBarrierList==None:
-            self.skullBarrierList = arcade.AStarBarrierList(self.monsterList[0], self.startingRightWallList,50,0,self.width,0,self.height)
+        try:
+            if self.currentScene==self.startingRightScene and self.skullBarrierList==None:
+                self.skullBarrierList = arcade.AStarBarrierList(self.monsterList[0], self.startingRightWallList,50,0,self.width,0,self.height)
 
-        if self.skullBarrierList!=None and self.currentScene==self.startingRightScene:
-                self.skullPath = arcade.astar_calculate_path([self.skull.center_x,self.skull.center_y],[self.player.center_x,self.player.center_y],
-                                                self.skullBarrierList, diagonal_movement=False)
-                if self.skullPath and len(self.skullPath) > 1:
-                    if self.skull.center_y < self.skullPath[1][1]:
-                        self.skull.center_y += min(self.skull.speed,self.skullPath[1][1] - self.skull.center_y+10)
-                        self.skull.center_y += 1
+            if self.skullBarrierList!=None and self.currentScene==self.startingRightScene:
+                    self.skullPath = arcade.astar_calculate_path([self.skull.center_x,self.skull.center_y],[self.player.center_x,self.player.center_y],
+                                                    self.skullBarrierList, diagonal_movement=False)
+                    if self.skullPath and len(self.skullPath) > 1:
+                        if self.skull.center_y < self.skullPath[1][1]:
+                            self.skull.center_y += min(self.skull.speed,self.skullPath[1][1] - self.skull.center_y+10)
+                            self.skull.center_y += 1
 
-                    elif self.skull.center_y > self.skullPath[1][1]:
-                        self.skull.center_y -= min(self.skull.speed, self.skull.center_y - self.skullPath[1][1])
-                        self.skull.center_y -= 1
+                        elif self.skull.center_y > self.skullPath[1][1]:
+                            self.skull.center_y -= min(self.skull.speed, self.skull.center_y - self.skullPath[1][1])
+                            self.skull.center_y -= 1
 
-                    if self.skull.center_x < self.skullPath[1][0]:
-                        self.skull.center_x += min(self.skull.speed,self.skullPath[1][0] - self.skull.center_x+10)
-                        self.skull.center_x += 1
-                        self.skull.change_x=.001
+                        if self.skull.center_x < self.skullPath[1][0]:
+                            self.skull.center_x += min(self.skull.speed,self.skullPath[1][0] - self.skull.center_x+10)
+                            self.skull.center_x += 1
+                            self.skull.change_x=.001
 
-                    elif self.skull.center_x > self.skullPath[1][0]:
-                        self.skull.center_x -= min(self.skull.speed, self.skull.center_x-10 - self.skullPath[1][0])
-                        self.skull.center_x += -1
-                        self.skull.change_x=-.001
-        if self.currentScene!=self.tUnderScene:
-            self.flyMon.center_x=500
-            self.flyMon.center_y=400
-        if self.currentScene==self.tUnderScene and self.flyBarrierList==None:
-            self.flyBarrierList = arcade.AStarBarrierList(self.monsterList[0], self.tUnderWallList,60,0,self.width,0,self.height)
+                        elif self.skull.center_x > self.skullPath[1][0]:
+                            self.skull.center_x -= min(self.skull.speed, self.skull.center_x-10 - self.skullPath[1][0])
+                            self.skull.center_x += -1
+                            self.skull.change_x=-.001
+            if self.currentScene!=self.tUnderScene:
+                self.flyMon.center_x=500
+                self.flyMon.center_y=400
+            if self.currentScene==self.tUnderScene and self.flyBarrierList==None:
+                self.flyBarrierList = arcade.AStarBarrierList(self.monsterList[0], self.tUnderWallList,60,0,self.width,0,self.height)
 
-        if self.flyBarrierList!=None and self.currentScene==self.tUnderScene:
-                self.flyPath = arcade.astar_calculate_path([self.flyMon.center_x,self.flyMon.center_y],[self.player.center_x,self.player.center_y],
-                                                self.flyBarrierList, diagonal_movement=False)
-                if self.flyPath and len(self.flyPath) > 1:
-                    if self.flyMon.center_y < self.flyPath[1][1]:
-                        self.flyMon.center_y += min(self.flyMon.speed,self.flyPath[1][1] - self.flyMon.center_y+10)
-                        self.flyMon.center_y += 1
+            if self.flyBarrierList!=None and self.currentScene==self.tUnderScene:
+                    self.flyPath = arcade.astar_calculate_path([self.flyMon.center_x,self.flyMon.center_y],[self.player.center_x,self.player.center_y],
+                                                    self.flyBarrierList, diagonal_movement=False)
+                    if self.flyPath and len(self.flyPath) > 1:
+                        if self.flyMon.center_y < self.flyPath[1][1]:
+                            self.flyMon.center_y += min(self.flyMon.speed,self.flyPath[1][1] - self.flyMon.center_y+10)
+                            self.flyMon.center_y += 1
 
-                    elif self.flyMon.center_y > self.flyPath[1][1]:
-                        self.flyMon.center_y -= min(self.flyMon.speed, self.flyMon.center_y - self.flyPath[1][1])
-                        self.flyMon.center_y -= 1
+                        elif self.flyMon.center_y > self.flyPath[1][1]:
+                            self.flyMon.center_y -= min(self.flyMon.speed, self.flyMon.center_y - self.flyPath[1][1])
+                            self.flyMon.center_y -= 1
 
-                    if self.flyMon.center_x < self.flyPath[1][0]:
-                        self.flyMon.center_x += min(self.flyMon.speed,self.flyPath[1][0] - self.flyMon.center_x+10)
-                        self.flyMon.center_x += 1
-                        self.flyMon.change_x=.001
+                        if self.flyMon.center_x < self.flyPath[1][0]:
+                            self.flyMon.center_x += min(self.flyMon.speed,self.flyPath[1][0] - self.flyMon.center_x+10)
+                            self.flyMon.center_x += 1
+                            self.flyMon.change_x=.001
 
-                    elif self.flyMon.center_x > self.flyPath[1][0]:
-                        self.flyMon.center_x -= min(self.flyMon.speed, self.flyMon.center_x-10 - self.flyPath[1][0])
-                        self.flyMon.center_x += -1
-                        self.flyMon.change_x=-.001
+                        elif self.flyMon.center_x > self.flyPath[1][0]:
+                            self.flyMon.center_x -= min(self.flyMon.speed, self.flyMon.center_x-10 - self.flyPath[1][0])
+                            self.flyMon.center_x += -1
+                            self.flyMon.change_x=-.001
+        except:
+            print("None")
         self.npcCheck = arcade.check_for_collision(self.player, self.npc) and self.currentScene==self.townScene
         self.dogCheck = arcade.check_for_collision(self.player, self.dogSprite) and self.currentScene==self.tUnderScene
         self.skullCheck = arcade.check_for_collision(self.player,self.skull) and self.skull.death==False
